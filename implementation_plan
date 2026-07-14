@@ -1,0 +1,220 @@
+# Digital Mental Health & Psychological Support System — Implementation Plan (v2)
+
+MERN Stack (MongoDB, Express.js, React, Node.js) web platform.
+
+---
+
+## 🎯 Roles & Features (5 Roles)
+
+### Role 1: 🎓 Student
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | **AI Chatbot + Calming Frequencies** | Detects crisis keywords → plays therapeutic frequency audio (432Hz calm, 528Hz healing, binaural beats) matched to detected mood. Offers coping strategies |
+| 2 | **Professional Referral (Auto)** | When chatbot detects severe crisis → auto-refers to counsellor via **dashboard notification + email + WhatsApp message** |
+| 3 | **Screening Tools (PHQ-9 / GAD-7)** | Validated questionnaires with scored severity results |
+| 4 | **Confidential Booking** | Book counsellor appointments, view available slots |
+| 5 | **1-on-1 Chat with Counsellor** | Private, secure chat directly with assigned counsellor |
+| 6 | **Resource Hub** | Videos, audio, guides in English + Hindi |
+| 7 | **Peer Support Forum** | Anonymous posting, replies, upvotes (moderated) |
+| 8 | **Mood Tracker** | Daily check-in with visual chart |
+| 9 | **Emergency SOS** | One-tap crisis helpline numbers |
+
+### Role 2: 🧑‍⚕️ Counsellor
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | **Referral Alerts** | Receives **dashboard notification + email + WhatsApp** when AI chatbot refers a student |
+| 2 | **1-on-1 Chat with Student** | Private chat with referred/booked students |
+| 3 | **Appointment Management** | View, accept, reschedule, complete bookings |
+| 4 | **Student Screening Reports** | View screening results (with consent) |
+| 5 | **Session Notes** | Private notes per student |
+| 6 | **Availability Management** | Set available time slots |
+
+### Role 3: 🤝 Peer Volunteer *(see rationale below)*
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | **Forum Moderation** | Flag/remove harmful content, approve posts |
+| 2 | **Escalation to Counsellor** | Flag concerning forum posts → notifies counsellor |
+| 3 | **Training Resources** | Access volunteer training materials |
+| 4 | **Activity Dashboard** | View moderation stats, flagged posts |
+
+### Role 4: 🏛️ Admin
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | **Analytics Dashboard** | Anonymized charts: screening trends, bookings, forum activity |
+| 2 | **Resource Management** | Upload/manage psychoeducational content |
+| 3 | **User Management** | Approve/manage counsellors and volunteers |
+| 4 | **Reports Export** | Export anonymized trend data |
+| 5 | **Announcements** | Post campus-wide mental health announcements |
+
+### Role 5: ⚙️ Super Admin
+| # | Feature | Description |
+|---|---------|-------------|
+| 1 | **Full User Management** | CRUD all users across all roles |
+| 2 | **System Configuration** | Screening tools, languages, branding |
+| 3 | **Audit Logs** | System activity logs |
+| 4 | **Notification Settings** | Configure email (SMTP) and WhatsApp (Twilio) credentials |
+
+---
+
+## 💡 Design Decisions (Answers to Your Questions)
+
+### 1. Chatbot + Frequency-Based Calming Audio
+
+When the AI chatbot detects crisis/mood keywords, it will:
+
+```mermaid
+flowchart LR
+    A[Student types message] --> B{Keyword Detection}
+    B -->|anxiety/panic| C[🎵 Play 432Hz + Breathing Guide]
+    B -->|sadness/lonely| D[🎵 Play 528Hz Healing Frequency]
+    B -->|anger/frustration| E[🎵 Play Delta Wave 2Hz Binaural]
+    B -->|severe crisis| F[🚨 Auto-Refer to Counsellor]
+    F --> G[📧 Email + 💬 WhatsApp + 🔔 Dashboard Alert]
+    C --> H[Show coping strategies]
+    D --> H
+    E --> H
+```
+
+**Frequencies mapped to moods:**
+| Mood Detected | Frequency | Type | Effect |
+|--------------|-----------|------|--------|
+| Anxiety / Panic | 432 Hz | Solfeggio | Calming, reduces heart rate |
+| Sadness / Loneliness | 528 Hz | Solfeggio | "Love frequency", emotional healing |
+| Anger / Frustration | 2 Hz Delta | Binaural Beat | Deep relaxation |
+| Stress / Overwhelm | 10 Hz Alpha | Binaural Beat | Relaxed focus |
+| Insomnia | 3 Hz Delta | Binaural Beat | Sleep induction |
+
+Audio files will be generated using the **Web Audio API** (no external files needed — pure sine wave generation in the browser).
+
+---
+
+### 2. Professional Referral → Email + WhatsApp + Dashboard
+
+When chatbot detects severe crisis keywords (e.g., "suicide", "self-harm", "can't go on"):
+
+| Channel | Technology | Implementation |
+|---------|-----------|----------------|
+| **Dashboard** | MongoDB + Socket-like polling | Referral saved to DB, counsellor sees it in real-time on dashboard |
+| **Email** | Nodemailer + Gmail SMTP | Auto-sends email to counsellor with student ID (anonymized) + crisis summary |
+| **WhatsApp** | Twilio WhatsApp API | Sends WhatsApp message to counsellor's registered number |
+
+> [!NOTE]
+> For demo/interview: Email will work with a Gmail app password. WhatsApp will use Twilio's free sandbox (no paid account needed for testing).
+
+---
+
+### 3. Why Keep Peer Volunteers? Why NO Peer Chat?
+
+**Why 1-on-1 chat is Student ↔ Counsellor ONLY (not Student ↔ Volunteer):**
+
+| Reason | Explanation |
+|--------|-------------|
+| **Liability** | Volunteers are untrained students — giving private advice could be harmful and creates legal liability for the institution |
+| **Ethics** | Private mental health conversations require professional training; volunteers could unintentionally say something damaging |
+| **Safety** | Forum is public/moderated = built-in safety net. Private chat has no oversight |
+| **Scope** | Volunteers should handle community support, not clinical intervention |
+
+**Why Peer Volunteers are still valuable:**
+
+| Value | How |
+|-------|-----|
+| **Reduce counsellor burden** | Volunteers handle forum moderation so counsellors focus on 1-on-1 sessions |
+| **Early detection** | Volunteers spot concerning forum posts and escalate to counsellors before crisis |
+| **Community building** | Trained volunteers write empathetic public replies in the forum, making students feel heard |
+| **Scalability** | 2-3 counsellors can't monitor a forum with 500+ students; 20 trained volunteers can |
+
+> [!IMPORTANT]
+> Peer Volunteers moderate the **public forum only** and escalate concerning cases. All private/clinical communication is strictly **Student ↔ Counsellor**.
+
+---
+
+## 🏗️ Tech Stack (MERN)
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 18 + Vite |
+| **Styling** | Vanilla CSS (custom properties, glassmorphism) |
+| **Backend** | Node.js + Express.js |
+| **Database** | MongoDB + Mongoose |
+| **Auth** | JWT + bcryptjs |
+| **Email** | Nodemailer (Gmail SMTP) |
+| **WhatsApp** | Twilio WhatsApp API |
+| **Audio** | Web Audio API (browser-generated frequencies) |
+| **Charts** | Chart.js + react-chartjs-2 |
+| **Icons** | Lucide React |
+
+---
+
+## 📁 Project Structure
+
+```
+d:\MH\
+├── server/
+│   ├── package.json
+│   ├── server.js
+│   ├── .env                    # MONGO_URI, JWT_SECRET, SMTP, TWILIO creds
+│   ├── config/
+│   │   └── db.js               # MongoDB connection
+│   ├── middleware/
+│   │   ├── auth.js             # JWT verification
+│   │   └── roleCheck.js        # Role-based access control
+│   ├── models/
+│   │   ├── User.js, Appointment.js, Screening.js
+│   │   ├── ForumPost.js, Resource.js, MoodEntry.js
+│   │   ├── ChatMessage.js, Announcement.js, Referral.js
+│   │   └── AuditLog.js
+│   ├── routes/
+│   │   ├── auth.js, appointments.js, screenings.js
+│   │   ├── forum.js, resources.js, mood.js
+│   │   ├── chat.js, admin.js, users.js
+│   │   └── referrals.js
+│   ├── controllers/            # Mirrors routes
+│   ├── services/
+│   │   ├── emailService.js     # Nodemailer
+│   │   └── whatsappService.js  # Twilio WhatsApp
+│   └── seed/
+│       └── seedData.js         # Demo data for all 5 roles
+│
+├── client/
+│   ├── package.json, vite.config.js, index.html
+│   └── src/
+│       ├── main.jsx, App.jsx, index.css
+│       ├── api/axios.js        # Axios + JWT interceptor
+│       ├── context/AuthContext.jsx
+│       ├── hooks/useAudioTherapy.js   # Web Audio API frequency generator
+│       ├── data/
+│       │   ├── copingStrategies.js
+│       │   ├── screeningTools.js
+│       │   └── frequencyMap.js  # Mood → frequency mapping
+│       ├── components/
+│       │   ├── common/         # Navbar, Sidebar, Modal, Card, ProtectedRoute
+│       │   ├── chat/           # ChatBot (with audio player), ChatMessage
+│       │   ├── booking/        # BookingForm, TimeSlotPicker
+│       │   ├── screening/      # ScreeningQuiz, ResultCard
+│       │   ├── forum/          # ForumPost, NewPostForm
+│       │   ├── resources/      # ResourceCard, ResourceViewer
+│       │   └── dashboard/      # AnalyticsCharts, MoodChart
+│       └── pages/
+│           ├── LoginPage.jsx, RegisterPage.jsx
+│           ├── student/        # Dashboard, Chat, Booking, Screening, Resources, Forum, SOS
+│           ├── counsellor/     # Dashboard, Appointments, Chat, Availability
+│           ├── volunteer/      # Dashboard (moderation, escalation)
+│           ├── admin/          # Dashboard, UserMgmt, ResourceMgmt
+│           └── superadmin/     # Dashboard, SystemConfig, NotificationSettings
+```
+
+---
+
+## Verification Plan
+
+### Automated
+- `npm run dev` on server (port 5000) + client (port 5173) — no errors
+- `npm run build` on client — production build compiles
+
+### Browser Testing
+1. Login with each demo role → verify dashboards
+2. Student: type "I feel anxious" in chatbot → verify 432Hz audio plays
+3. Student: type "I want to end it all" → verify counsellor gets dashboard alert + email
+4. Counsellor: view referral alerts → reply to student in 1-on-1 chat
+5. Volunteer: moderate forum → escalate a post
+6. Admin: view analytics → export report
